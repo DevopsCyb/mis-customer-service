@@ -1,0 +1,18 @@
+
+name: Deploy customer service
+
+on: 
+  workflow_dispatch: 
+
+jobs: 
+  builds-and-deploy:
+    uses: cybagedevops/mis-reusable/.github/workflows/Service-reusable-template-vaishnavi.yml@main
+    with:
+      app-name: 'mis-customer-service-vaishnavi'
+      resource-group: 'rg-mis-vaishnavi'
+      keyVaultName: 'mis-keyvault-vaishn-qa'
+      resourceGroupNameKeyVault: 'rg-mis-persistent'
+      ProjectPath: 'Mis.Services.Customer.Api/Mis.Services.Customer.Api.csproj'
+      appSettings: 'vaishnaviQA'
+      buildProject: 'true'
+    secrets: inherit  

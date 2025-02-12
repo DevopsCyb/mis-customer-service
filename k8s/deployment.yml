@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mis-cus-svc
+spec:
+  selector:
+    matchLabels:
+      app: mis-cus-svc
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: mis-cus-svc
+    spec:
+      containers:
+      - name: customer
+        image: cybage.azurecr.io/mis.services.cus:latest
+        ports:
+        - containerPort: 80 
+        env:
+        - name: ConnectionStrings__CustomerServiceConnectionString
+          valueFrom:
+            configMapKeyRef:
+              name: cus-cm
+              key: ConnectionStrings
+
+---
+
+apiVersion: v1 # Kubernetes API version
+kind: Service # Kubernetes resource kind we are creating
+metadata: # Metadata of the resource kind we are creating
+  name: mis-cus-svc
+spec:
+  selector:
+    app: mis-cus-svc
+  ports:
+    - protocol: "TCP"
+      port: 80 # The port that the service is running on in the cluster
+      targetPort: 80 # The port exposed by the service
+  type: ClusterIP # type of the service.
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cus-cm
+data:
+  ConnectionStrings: __CONNECTION_STRING__

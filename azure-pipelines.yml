@@ -1,0 +1,38 @@
+name: MIS-CUSTOMER-SERVICE-BUILD-DEPLOY-YASH-$(Year:yyyy).$(Month).$(DayOfMonth)-$(rev:rr)
+
+trigger:
+- none
+
+pool: 
+ name: Azure VM Agent Pool
+
+resources:
+  # pipelines:
+  #     - pipeline: mis-digital-db-yash
+  #       source: MIS-DIGITAL-DB-CI-CD-YASH-20231107
+  #       trigger: true
+
+  repositories:
+    - repository: mis-reusable
+      type: github
+      name: cybagedevops/mis-reusable
+      endpoint: mis
+      ref: main
+
+variables:
+ group: MIS-DB-YASH
+
+jobs:
+ 
+  - template: .azure/pipelines/yash/build-deploy-app-service.yml@mis-reusable
+
+    parameters:
+
+        azureSubscription: $(azureSubscription)
+        keyVaultName: $(keyVaultName)
+        keyVaultResourceGroupName: $(keyVaultResourceGroupName)
+        allServicesResourceGroupName: $(allServicesResourceGroupName)
+        azureAppName: 'mis-customer-svc-yash'
+        serviceName: 'Customer'
+
+    

@@ -1,0 +1,12 @@
+{
+  "dependencies": {
+    "mssql1": {
+      "serviceConnectorResourceId": "/subscriptions/[parameters('subscriptionId')]/resourceGroups/[parameters('resourceGroupName')]/providers/Microsoft.Web/sites/mis-customer-webapp/providers/Microsoft.ServiceLinker/linkers/ConnectionStringsCustomerServiceConnecti_8F1ED91569",
+      "secretStore": "AzureAppSettings",
+      "resourceId": "/subscriptions/[parameters('subscriptionId')]/resourceGroups/[parameters('resourceGroupName')]/providers/Microsoft.Sql/servers/mis-sql-db/databases/mis-customer-db",
+      "type": "mssql.azure",
+      "connectionId": "ConnectionStrings:CustomerServiceConnectionString",
+      "dynamicId": null
+    }
+  }
+}

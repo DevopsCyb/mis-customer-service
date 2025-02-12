@@ -1,0 +1,91 @@
+name: Deploy ASP.NET core web api to IIS
+on:
+ workflow_dispatch:
+  inputs:
+    Server:
+      description: 'Database Server Name'
+      required: true
+      default: "SHRIVADANK-VD"
+      
+    DatabaseName:
+      description: 'Database Name'
+      required: true
+      default: "Mis.Services.Customer.Database"
+      
+    UserName:
+      description: 'User Name for Database'
+      required: true
+      default: "shrivadankoshti"
+      
+    Password:
+      description: 'Enter Password'
+      required: true
+      
+jobs:
+ Build-and-Deploy:
+  runs-on: self-hosted
+  steps:
+   - name: Checkout Code
+     uses: actions/checkout@v3
+     with:
+        fetch-depth: 0
+     
+   - name: Check for dotnet version
+     run: dotnet --version
+     
+   - name: Replace tokens
+     uses: cschleiden/replace-tokens@v1.2
+     with:
+          tokenPrefix: '#{'
+          tokenSuffix: '}#'
+          files: '["**/*.json"]'
+     env:
+         cs: "Data Source=${{github.event.inputs.Server}};Initial Catalog=${{github.event.inputs.DatabaseName}};Persist Security Info=False;User ID=${{github.event.inputs.UserName}};Password=${{github.event.inputs.Password}};MultipleActiveResultSets=False;Encrypt=False;TrustServerCertificate=False;Connection Timeout=30;"
+         
+   - name: Restore dependencies for the application
+     run: dotnet restore Mis.Services.Customer.Api/Mis.Services.Customer.Api.csproj
+      
+   - name: Build application
+     run: dotnet build Mis.Services.Customer.Api/Mis.Services.Customer.Api.csproj 
+     
+   - name: Publish Application
+     run: dotnet publish Mis.Services.Customer.Api/Mis.Services.Customer.Api.csproj --output ./publish
+     
+   - name: Check user privileges as admin or not
+     shell: pwsh
+     run: |
+       $isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+       if ($isAdmin) {
+            Write-Host "Current user is an administrator."
+          } else {
+           Start-Process powershell.exe "-NoProfile -ExecutionPolicy Bypass -Command `"& '${{ github.workspace }}/deploy.ps1'`"" -Verb RunAs
+           Exit
+          }  
+       # variables for deployment
+       $websiteName = "mis-lvm-svc"
+       $webAppPath = "C:\inetpub\wwwroot\mis-lvm-svc\"
+       $sourcePath = "E:\cybage-technical\github-repo\cybagedevops\actions-runner\_work\mis-leave-management-service\mis-leave-management-service\publish" 
+       # Create Website
+       Import-Module WebAdministration
+       Stop-Website "Default Web Site"
+       # stop website if exists
+       if (Get-Website $websiteName) {
+         Stop-Website $websiteName
+       }
+       # Delete website if exists
+       if (Get-WebSite $websiteName) {
+         Remove-Website $websiteName
+       }
+       # Create new website
+       New-Website -Name $websiteName -PhysicalPath $webAppPath -Port 8082 -Force
+       # Remove  files in website directory
+       # Remove-Item C:\inetpub\wwwroot\mis-lvm-svc -Recurse
+       # copy new files to website directory
+       Copy-Item $sourcePath\* $webAppPath -Recurse -Force
+       # Start the website
+       Start-Website $websiteName
+       
+        
+  
+      
+     

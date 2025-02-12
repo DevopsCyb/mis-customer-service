@@ -1,0 +1,16 @@
+name: feature-push-ci
+
+on: 
+    repository_dispatch:
+        types: [build]
+
+    push:
+      branches:
+       - mis-*
+
+
+jobs:
+  Build-Feature-Push:
+     uses: cybagedevops/mis-reusable/.github/workflows/build.yml@main
+     with:
+            SERVICE_NAME: Mis.Services.Customer.Api

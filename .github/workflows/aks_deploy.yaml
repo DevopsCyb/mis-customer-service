@@ -1,0 +1,82 @@
+name: Dotnet Deploy to AKS
+on:
+  workflow_dispatch:
+    inputs:
+      namespace:
+        type: choice
+        description: choose env dev or prod
+        options: 
+        - ns-mis-aspnet-dev
+        - ns-mis-aspnet-prod
+        
+     
+      Server:
+        description: 'Server Name ' 
+        required: true
+        default: "sqldnslabel.centralindia.cloudapp.azure.com"
+        
+      DatabaseName:
+        description: 'Database Name ' 
+        required: true
+        default: "Customer"        
+
+      UserId:
+        description: 'Database User Id ' 
+        required: true
+        default: "saurabh"
+
+      Password:
+        description: 'Database Password ' 
+        required: true
+
+      ResourceGroup:
+        description: 'Resource Group Name' 
+        required: true
+        default: "rg-mis-aks"
+     
+      ClusterName:
+        description: 'Cluster Name ' 
+        required: true
+        default: "mis-aks-cluster"
+jobs:
+  Deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      
+    
+    - uses: cschleiden/replace-tokens@v1
+      with:
+        files: '["k8s/*.yaml"]'
+        tokenPrefix: __ 
+        tokenSuffix: __ 
+      env:
+        ConnectionStrings: "Server=tcp:${{github.event.inputs.Server}},1433;Initial Catalog=Mis.Services.Customer.Database;Persist Security Info=True;User ID=${{github.event.inputs.UserId}};Password=${{github.event.inputs.Password}};MultipleActiveResultSets=False;Encrypt=False;TrustServerCertificate=True;Connection Timeout=30;"
+        
+    - name: Azure login
+      id: login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+    
+    - name: Set AKS context
+      id: set-context
+      uses: azure/aks-set-context@v3
+      with:
+        resource-group: ${{github.event.inputs.ResourceGroup}}
+        cluster-name: ${{github.event.inputs.ClusterName}}
+        ConnectionStrings: ${{github.event.inputs.ConnectionStrings}}
+        
+    - name: Setup kubectl
+      id: install-kubectl
+      uses: azure/setup-kubectl@v3    
+      
+    - name: Deploy to AKS
+      id: deploy-aks
+      uses: Azure/k8s-deploy@v4       
+      with:
+        namespace: ${{ github.event.inputs.namespace }}
+        manifests: |
+            k8s/customer.yaml
+        images: cybage.azurecr.io/mis.service.cus:latest
+        pull: false  

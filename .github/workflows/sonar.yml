@@ -1,0 +1,55 @@
+# This workflow will build a .NET project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
+
+name: Sonar
+
+on:
+ workflow_dispatch:
+    inputs:
+      qualitygate:
+        type: choice
+        description: 'Choose true or false'
+        options: 
+        - 'true'
+        - 'false'
+        default: 'true'
+jobs:
+  build:
+
+    runs-on: self-hosted
+    env:
+      SONAR_HOST_URL: "http://172.27.59.89:9000/"
+      SONAR_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v1
+        with:
+           dotnet-version: 7.x
+      - name: Restore dependencies
+        run: |
+          cd source
+          dotnet restore Mis.Services.Customer.Api.UnitTests/Mis.Services.Customer.Api.UnitTests.csproj
+      
+#     - name: adding scanner
+#       run: |
+#           cd source
+#           dotnet tool install --global dotnet-sonarscanner
+      
+
+      - name: SonarQube Analysis
+        if: success() || failure()
+        run: | 
+             cd source
+             dotnet tool install --global dotnet-sonarscanner
+             dotnet sonarscanner begin /k:"${{ vars.SONAR_PROJECT_KEY }}" /d:sonar.host.url="${{ secrets.SONAR_HOST_URL }}"  /d:sonar.login=${{ secrets.SONARQUBE_TOKEN }} /d:sonar.cs.vscoveragexml.reportsPaths="coverage.xml"
+             dotnet build Mis.Services.Customer.Api.UnitTests/MIS.Services.Customer.Api.UnitTests.csproj --no-incremental
+             dotnet-coverage collect 'dotnet test' -f xml -o 'coverage.xml'
+             dotnet sonarscanner end /d:sonar.login=${{ secrets.SONARQUBE_TOKEN }}
+            
+        
+  
+            
+

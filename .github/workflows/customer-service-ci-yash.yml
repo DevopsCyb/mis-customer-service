@@ -1,0 +1,12 @@
+name: customer-service-ci-yash
+on:
+  workflow_dispatch:
+
+jobs:
+    Build:
+        uses: cybagedevops/mis-reusable/.github/workflows/mis-services-reusable-template-ci-yash.yaml@main
+        with:
+          artifact-name: 'customer-service'
+          path-name: 'Mis.Services.Customer.Api/Mis.Services.Customer.Api.csproj'
+          
+        secrets: inherit

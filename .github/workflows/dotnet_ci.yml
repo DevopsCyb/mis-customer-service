@@ -1,0 +1,23 @@
+name: Dotnet Build With MSBuild
+on:
+  workflow_dispatch:
+    
+jobs:
+  Deploy:
+    runs-on:  Windows-latest
+    steps:
+     - name : Git Checkout
+       uses: actions/checkout@v1
+       
+      
+
+     - name: Add msbuild to PATH
+       uses: microsoft/setup-msbuild@v1.1
+
+     - name: Restore dependencies
+       working-directory: source
+       run: dotnet restore Mis.Services.Customer.Api/Mis.Services.Customer.Api.csproj  
+ 
+     - name: Build app for release
+       working-directory: source
+       run: msbuild Mis.Services.Customer.Api/Mis.Services.Customer.Api.csproj -t:rebuild -property:Configuration=Release

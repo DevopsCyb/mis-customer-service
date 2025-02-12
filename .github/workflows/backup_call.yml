@@ -1,0 +1,17 @@
+name: Calling Backup workflow
+
+run-name: ${{ inputs.DATABASE.NAME }}.${{ github.ref }}.${{github.repopsitory.updated_at}}.${{github.run_number}}
+on:
+  push:
+  workflow_dispatch:
+
+ 
+jobs:  
+  call-workflow-passing-data:
+
+    uses: cybagedevops/mis-iac/.github/workflows/reusable_backup.yml@main
+    with:
+          database_name: ${{ inputs.DATABASE.NAME }}
+    secrets:
+          SQL_SERVER_PASSWORD: ${{ secrets.SQL_SERVER_PASSWORD }}
+          SQL_SERVER_USERNAME: ${{ secrets.SQL_SERVER_USERNAME }}
